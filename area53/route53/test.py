@@ -24,6 +24,18 @@ class TestRoute53(unittest.TestCase):
         self.assertEquals(record.resource_records, [u'186.143.32.2'])
         self.assertEquals(record.ttl, u'800')
 
+    def test_txt(self):
+        self.zone.add_txt('example.com', '"this is test 1"', 80)
+        record = self.zone.get_txt('example.com')
+        self.assertEquals(record.name, u'example.com.')
+        self.assertEquals(record.resource_records, [u'"this is test 1"'])
+        self.assertEquals(record.ttl, u'80')
+        self.zone.update_txt('example.com', '"this is test 2"', '800')
+        record = self.zone.get_txt('example.com')
+        self.assertEquals(record.name, u'example.com.')
+        self.assertEquals(record.resource_records, [u'"this is test 2"'])
+        self.assertEquals(record.ttl, u'800')
+
     def test_cname(self):
         self.zone.add_cname('www.example.com', 'webserver.example.com', 200)
         record = self.zone.get_cname('www.example.com')
@@ -57,6 +69,7 @@ class TestRoute53(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         self.zone.delete_a('example.com')
+        self.zone.delete_txt('example.com')
         self.zone.delete_cname('www.example.com')
         self.zone.delete_mx()
         self.zone.delete()
