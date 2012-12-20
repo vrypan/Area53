@@ -134,6 +134,16 @@ class Zone(object):
                                value=value, 
                                ttl=ttl, 
                                comment=comment)
+                               
+    def add_txt(self, name, value, ttl=None, comment=""):
+        """Add an TXT record to the zone."""
+        ttl = ttl or default_ttl
+        name = route53.make_qualified(name)
+        return self.add_record(resource_type='TXT', 
+                               name=name, 
+                               value=value, 
+                               ttl=ttl, 
+                               comment=comment)
 
     def add_mx(self, records, ttl=None, comment=""):
         """Add an MX record to the zone."""
@@ -144,7 +154,6 @@ class Zone(object):
                                value=records, 
                                ttl=ttl, 
                                comment=comment)
-
 
     def get_cname(self, name):
         """ Get the given CNAME record."""
@@ -158,6 +167,13 @@ class Zone(object):
         name = route53.make_qualified(name)
         for record in self.get_records():
             if record.name == name and record.type == 'A':
+                return record
+                
+    def get_txt(self, name):
+        """ Get the given TXT record."""
+        name = route53.make_qualified(name)
+        for record in self.get_records():
+            if record.name == name and record.type == 'TXT':
                 return record
 
     def get_mx(self):
@@ -192,6 +208,19 @@ class Zone(object):
                                   old_ttl=old_record.ttl, 
                                   new_ttl=ttl, 
                                   comment=comment)
+                                  
+    def update_txt(self, name, value, ttl=None, comment=""):
+        """ Update the given TXT record to a new value and ttl."""
+        name = route53.make_qualified(name)
+        old_record = self.get_txt(name)
+        ttl = ttl or old_record.ttl
+        return self.update_record(resource_type='TXT', 
+                                  name=name, 
+                                  old_value=old_record.resource_records, 
+                                  new_value=value, 
+                                  old_ttl=old_record.ttl, 
+                                  new_ttl=ttl, 
+                                  comment=comment)
 
     def update_mx(self, value, ttl=None, comment=""):
         """ Update the MX records to the new value and ttl."""
@@ -218,6 +247,14 @@ class Zone(object):
     def delete_a(self,name):
         """ Delete the given A record for this zone."""
         record = self.get_a(route53.make_qualified(name))
+        return self.delete_record(resource_type=record.type, 
+                                  name=record.name, 
+                                  value=record.resource_records, 
+                                  ttl=record.ttl)
+
+    def delete_txt(self,name):
+        """ Delete the given TXT record for this zone."""
+        record = self.get_txt(route53.make_qualified(name))
         return self.delete_record(resource_type=record.type, 
                                   name=record.name, 
                                   value=record.resource_records, 
